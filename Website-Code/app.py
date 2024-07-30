@@ -77,18 +77,44 @@ def get_crop_info():
         if crop_pairings.empty:
             return jsonify({"error": f"No pairing data available for crop: {crop}"}), 404
         
-        fig1, ax1 = plt.subplots()
-        crop_pairings.plot(kind='bar', x='Crop', y='Correlation', ax=ax1)
-        ax1.set_title('Crop Pairings')
-        ax1.set_xlabel('Crop')
-        ax1.set_ylabel('Correlation')
-        plt.xticks(rotation=90)
+        
+        import joblib
+        from prophet import Prophet
+        import pandas as pd
+        import matplotlib.pyplot as plt
+
+        model_prophet = Prophet()
+        # Load the model
+        model_prophet = joblib.load('Helper/model_prophet.pkl')
+
+        # Make a future dataframe for 5 years (60 months)
+        future = model_prophet.make_future_dataframe(periods=60, freq='M')
+        forecast_prophet = model_prophet.predict(future)
+        
+        
+        
+        
+        # Plot the forecast
+        plt.figure(figsize=(25, 6))s
+        fig = model_prophet.plot(forecast_prophet)
+        plt.title('Rainfall Forecast for Next 5 Years using Prophet')
+        plt.xlabel('Date')
+        plt.ylabel('Rainfall (mm)')
+        # plt.show()
+        
+        # fig1, ax1 = plt.subplots()
+        # crop_pairings.plot(kind='bar', x='Crop', y='Correlation', ax=ax1)
+        # ax1.set_title('Crop Pairings')
+        # ax1.set_xlabel('Crop')
+        # ax1.set_ylabel('Correlation')
+        # plt.xticks(rotation=90)
 
         # Convert plot to base64
         img1 = io.BytesIO()
         fig1.savefig(img1, format='png')
         img1.seek(0)
         plot1_url = base64.b64encode(img1.getvalue()).decode()
+        
     except Exception as e:
         return jsonify({"error": f"Error generating crop pairings plot: {str(e)}"}), 500
 
@@ -109,12 +135,15 @@ def get_crop_info():
     except Exception as e:
         return jsonify({"error": f"Error generating rainfall trend plot: {str(e)}"}), 500
 
+
     response = {
         'season': crop_info['Season'].values[0] if not crop_info.empty else 'N/A',
         'pairings_plot': plot1_url,
         'rainfall_trend_plot': plot2_url
     }
     return jsonify(response)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
