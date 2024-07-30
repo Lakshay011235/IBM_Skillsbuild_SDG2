@@ -9,18 +9,21 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(to right, #3a1c71, #d76d77, #ffaf7b);
             color: #fff;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            background: linear-gradient(to right, #3a1c71, #d76d77, #ffaf7b); /* Retain the gradient background */
         }
         header {
-            background-color: #3a1c71;
+            background-color: #3a1c71; /* Retain the header background color */
             color: #fff;
             text-align: center;
             padding: 20px;
             animation: fadeIn 2s ease-in-out;
+            background-image: url('https://wallpapercave.com/wp/wp2916561.jpg'); /* Background image for header */
+            background-size: cover;
+            background-position: center;
         }
         h1 {
             margin: 0;
@@ -32,6 +35,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            background: url('https://www.laxmisulphates.com/laxmi-sulphates/industries-serve/agri.jpg') no-repeat center center; /* Replace with your crop background image URL */
+            background-size: cover;
         }
         form {
             background-color: #fff;
@@ -89,16 +94,10 @@
             margin-top: 10px;
         }
         footer {
-            background-color: #3a1c71;
+            background-color: #3a1c71; /* Retain the footer background color */
             color: #fff;
             text-align: center;
             padding: 10px 0;
-        }
-        .background {
-            background-image: url('https://wallpapercave.com/wp/wp2916561.jpg');
-            background-size: cover;
-            background-position: center;
-            padding: 60px 20px;
         }
         .image-container {
             position: relative;
@@ -106,7 +105,7 @@
             height: 200px;
             overflow: hidden;
             border-radius: 8px;
-            margin-bottom: 20px; /* Space above the animation */
+            margin-top: 30px; /* Space above the animation */
         }
         .image-container img {
             position: absolute;
@@ -114,16 +113,16 @@
             height: 100%;
             object-fit: cover;
             opacity: 0;
-            animation: imageFade 10s infinite;
+            animation: imageFade 15s infinite;
         }
         .image-container img:nth-child(1) {
             animation-delay: 0s;
         }
         .image-container img:nth-child(2) {
-            animation-delay: 4s;
+            animation-delay: 5s;
         }
         .image-container img:nth-child(3) {
-            animation-delay: 8s;
+            animation-delay: 10s;
         }
         @keyframes fadeIn {
             from {
@@ -180,7 +179,7 @@
     </style>
 </head>
 <body>
-    <header class="background">
+    <header>
         <h1>Get Crop Information</h1>
     </header>
     <main>
