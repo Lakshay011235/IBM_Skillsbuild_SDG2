@@ -4,30 +4,213 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crop Info</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: linear-gradient(to right, #3a1c71, #d76d77, #ffaf7b); /* Retain the gradient background */
+        }
+        header {
+            background-color: #3a1c71; /* Retain the header background color */
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            animation: fadeIn 2s ease-in-out;
+            background-image: url('https://wallpapercave.com/wp/wp2916561.jpg'); /* Background image for header */
+            background-size: cover;
+            background-position: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        main {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: url('https://www.laxmisulphates.com/laxmi-sulphates/industries-serve/agri.jpg') no-repeat center center; /* Replace with your crop background image URL */
+            background-size: cover;
+        }
+        form {
+            background-color: #fff;
+            color: #333;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 20px 0;
+            position: relative;
+            animation: slideIn 1.5s ease-in-out;
+        }
+        label {
+            font-weight: bold;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results {
+            background-color: #fff;
+            color: #333;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 20px 0;
+            text-align: center;
+            animation: fadeIn 2s ease-in-out;
+        }
+        #results img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        footer {
+            background-color: #3a1c71; /* Retain the footer background color */
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+        }
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 8px;
+            margin-top: 30px; /* Space above the animation */
+        }
+        .image-container img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            animation: imageFade 15s infinite;
+        }
+        .image-container img:nth-child(1) {
+            animation-delay: 0s;
+        }
+        .image-container img:nth-child(2) {
+            animation-delay: 5s;
+        }
+        .image-container img:nth-child(3) {
+            animation-delay: 10s;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+        @keyframes imageFade {
+            0% {
+                opacity: 0;
+            }
+            33% {
+                opacity: 1;
+            }
+            66% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .image-container {
+                height: 150px;
+            }
+        }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            .image-container {
+                height: 100px;
+            }
+            form {
+                padding: 10px;
+            }
+            button {
+                padding: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Get Crop Information</h1>
-    <form id="cropForm">
-        <label for="district">District:</label>
-        <select id="district" name="district">
-            <!-- Options will be populated by JavaScript -->
-        </select>
-        <br><br>
-        <label for="crop">Crop:</label>
-        <select id="crop" name="crop">
-            <!-- Options will be populated by JavaScript -->
-        </select>
-        <br><br>
-        <button type="button" onclick="getCropInfo()">Get Info</button>
-    </form>
-    <div id="results">
-        <h2>Results:</h2>
-        <p id="season"></p>
-        <h3>Crop Pairings:</h3>
-        <img id="pairingsPlot" src="" alt="Crop Pairings">
-        <h3>Rainfall Trend:</h3>
-        <img id="rainfallTrendPlot" src="" alt="Rainfall Trend">
-    </div>
+    <header>
+        <h1>Get Crop Information</h1>
+    </header>
+    <main>
+        <form id="cropForm">
+            <label for="district">District:</label>
+            <select id="district" name="district">
+                <!-- Options will be populated by JavaScript -->
+            </select>
+            <label for="crop">Crop:</label>
+            <select id="crop" name="crop">
+                <!-- Options will be populated by JavaScript -->
+            </select>
+            <div class="image-container">
+                <img src="https://wallpaperaccess.com/full/1598237.jpg" alt="Farming Image 1">
+                <img src="https://foodindustryexecutive.com/wp-content/uploads/2024/03/bigstock-Cabbage-Plantations-Grow-In-Th-252757654-696x461.jpg" alt="Farming Image 2">
+                <img src="https://kj1bcdn.b-cdn.net/media/27078/zaid-3.jpg?width=1200" alt="Farming Image 3">
+            </div>
+            <button type="button" onclick="getCropInfo()">Get Info</button>
+        </form>
+        <div id="results">
+            <h2>Results:</h2>
+            <p id="season"></p>
+            <h3>Crop Pairings:</h3>
+            <img id="pairingsPlot" src="" alt="Crop Pairings">
+            <h3>Rainfall Trend:</h3>
+            <img id="rainfallTrendPlot" src="" alt="Rainfall Trend">
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2024 Crop Info. All rights reserved.</p>
+    </footer>
 
     <script>
         async function populateOptions(endpoint, selectId) {
