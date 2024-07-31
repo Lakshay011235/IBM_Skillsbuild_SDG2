@@ -1,8 +1,10 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, send_from_directory
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
 import base64
+import os
+import urllib
 
 app = Flask(__name__)
 
@@ -41,18 +43,114 @@ sorted_pairs_crops = pd.DataFrame({
                     -0.002305, 0.000615]
 })
 
+subdivisions_to_districts = {
+        "ANDAMAN & NICOBAR ISLANDS": ["North  & Middle Andaman", "South Andaman", "Nicobars"],
+
+        "ARUNACHAL PRADESH": ["Tawang", "West Kameng", "East Kameng", "Papum Pare", "Lower Subansiri", "Kurung Kumey", "Upper Subansiri", "West Siang", "East Siang", "Upper Siang", "Lower Siang", "Siang", "Changlang", "Tirap", "Longding", "Namsai", "Lohit", "Anjaw", "Kra Daadi", "Kamle", "LOWER DIBANG VALLEY", "UPPER DIBANG VALLEY", "SHI YOM", "LEPA RADA", "PAKKE KESSANG" , ""],
+
+        "ASSAM & MEGHALAYA": ["North Cachar Hil / Dima Hasao", "Sibsagar","Kamrup", "Nagaon", "Tinsukia", "Cachar", "Goalpara", "Hojai", "Ri-Bhoi", "East Khasi Hills", "West Khasi Hills", "South West Khasi Hills", "West Jaintia Hills", "East Jaintia Hills", "North Garo Hills", "East Garo Hills", "South Garo Hills", "South West Garo Hills", "WEST KARBI ANGLONG" , "BAKSA", "BARPETA", "LAKHIMPUR", "TINSUKIA", 
+"KARBI ANGLONG","DHUBRI MAJULI","BISWANATH"," KOKRAJHAR",'CHARAIDEO','JORHAT','SOUTH SALMARA MANCACHAR','CHIRANG','KARIMGANJ','DIBRUGARH','SIVASAGAR','SONITPUR','DHEMAJI','DIMA HASAO','MORIGAON','KAMRUP METROPOLITAN','UDALGURI','NALBARI','BONGAIGAON','HAILAKANDI','GOLAGHAT','BAJALI','DARRANG'],
+
+        "NAGA MANI MIZO TRIPURA": ["Kohima", "Dimapur", "Imphal", "Bishnupur", "Chandel", "Aizawl", "Gomati", "Dhalai", "Khowai", "North Tripura", "Sepahijala", "South Tripura", "Unakoti", "West Tripura"],
+
+        "SUB HIMALAYAN WEST BENGAL & SIKKIM": ["Darjeeling", 'Cooch Behar', 'West Dinajpur', "Kalimpong", "Jalpaiguri", "East Sikkim", "West Sikkim", "North Sikkim", "South Sikkim"],
+
+        "GANGETIC WEST BENGAL": ["Kolkata", "Howrah", "24 Parganas","Burdwan", "Malda", "Midnapur", "Hooghly", "Nadia", "Murshidabad", "Paschim Bardhaman", "Purba Bardhaman", "Birbhum", "Bankura", "Purulia"],
+
+        "ORISSA": ["Phulbani ( Kandhamal )", "Balasore", "Bolangir", "Keonjhar", "Mayurbhanja", "Phulbani (Kandhamal)", "Sundargarh","Khordha", "Puri", "Cuttack", "Ganjam", "Balangir", "Kendujhar", "Bargarh", "Angul", "Boudh", "Bhadrak", "Debagarh", "Dhenkanal", "Gajapati", "Jagatsinghapur", "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Rayagada", "Sambalpur", "Sonepur", "Sundergarh"],
+
+        "JHARKHAND": ["Palamau", "Santhal Paragana / Dumka","Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar", "Hazaribagh", "Giridih", "Ramgarh", "Palamu", "East Singhbhum", "West Singhbhum", "Singhbhum", "Chatra", "Garhwa", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Sahebganj", "Simdega", "Seraikela Kharsawan", 'SAHIBGANJ','GUMLA','GODDA','PURBI SINGHBHUM','PASHCHIMI SINGHBHUM','SARAIKELA-KHARSAWAN','KODARMA','JAMTARA','DUMKA'],
+    
+        "BIHAR": ["Champaran", "Mungair", "Purnea", "Shahabad (Now Part of Bhojpur District)","Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga", "Bhojpur", "Begusarai", "Aurangabad", "Araria", "Arwal", "Banka", "Buxar", "East Champaran", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Khagaria", "Kishanganj", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Nalanda", "Nawada", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran", 'PASHCHIM CHAMPARAN','PURBA CHAMPARAN','GOPALGANJ','KAIMUR (BHABUA)'],
+
+        "EAST UTTAR PRADESH": ["Bahraich", "Banda", "Barabanki", "Buland Shahar", "Etah", "Etawah", "Faizabad", "Farrukhabad", "Fatehpur", "Ghazipur", "Gonda", "Hardoi", "Jalaun", "Jhansi", "Kanpur", "Kheri", "Lucknow", "Mainpuri", "Mirzpur", "Pilibhit", "Pratapgarh", "Rae-Bareily", "Saharanpur", "Sultanpur","Sitapur", "Unnao","Varanasi", "Allahabad", "Gorakhpur", "Azamgarh", "Jaunpur", "Ballia", "Basti", "Deoria", "Ghaziabad", "Maharajganj", "Mirzapur", "Sant Kabir Nagar", "Sant Ravidas Nagar", "Siddharthnagar"],
+
+        "WEST UTTAR PRADESH": ["Ghaziabad", "Gautam Budh Nagar", "Baghpat", "Meerut", "Muzaffarnagar", "Shamli", "Saharanpur", "Bulandshahr", "Aligarh", "Mathura", "Hathras", "Agra", "Firozabad", "Mainpuri", "Etah", "Kasganj", "Meerut", "Agra", "Aligarh", "Ghaziabad", "Gautam Buddha Nagar", "Bulandshahr", "Hapur", "Mathura", "Firozabad", "Shamli", "Muzaffarnagar", "Bijnor", "Moradabad", "Sambhal", "Amroha", "Rampur", "Bareilly", "Budaun", "Shahjahanpur"],
+
+        "UTTARAKHAND": ["Almorah", "Garhwal", "Pithorgarh", "Uttar Kashi","Dehradun", "Nainital", "Haridwar", "Almora", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi", "Chamoli", "Champawat"],
+
+        "HARYANA DELHI & CHANDIGARH": ["Hissar", "Mahendragarh / Narnaul","Gurgaon", "Faridabad", "Central", "East", "North", "North East", "North West", "South", "South East", "South West", "West", "Chandigarh", "SHAHDARA", "NEW DELHI", 'NUH','MAHENDRAGARH','KURUKSHETRA','KARNAL','KAITHAL','JHAJJAR','HISAR','GURUGRAM','FATEHABAD','PALWAL','PALWAL','JIND','AMBALA','PANIPAT','REWARI','ROHTAK','PANCHKULA','SIRSA','CHARKI DADRI','YAMUNANAGAR','SONIPAT'],
+
+        "PUNJAB": ["Bhatinda", "Ferozpur", "Roopnagar / Ropar","Amritsar", "Ludhiana", "Jalandhar", "Patiala", "Bathinda", "Mohali", "Gurdaspur", "Hoshiarpur", "Moga", "Kapurthala", "Sangrur", "Ferozepur", "Faridkot", "Rupnagar", "Pathankot", "Barnala", "Tarn Taran", "Fazilka", "SBS Nagar", "Mansa"],
+
+        "HIMACHAL PRADESH": ["Bilashpur","Shimla", "Kangra", "Solan", "Mandi", "Kullu", "Una", "Hamirpur", "Chamba", "Bilaspur", "Sirmaur", "Kinnaur", "Lahul & Spiti"],
+
+        "JAMMU & KASHMIR": ["Jammu", "Srinagar", "Anantnag", "Baramulla", "Udhampur", "Kathua", "Pulwama", "Kupwara", "Rajouri", "Doda", "Bandipora", "Shopian", "Ganderbal", "Kulgam", "Poonch", "Ramban", "Reasi", "Samba", 'BADGAM','KISHTWAR','SHUPIYAN','BARAMULA','BANDIPORE','PUNCH','MUZAFFARABAD','MIRPUR','KARGIL','LEH'],
+
+        "WEST RAJASTHAN": ["Jodhpur", "Bikaner", "Barmer", "Jaisalmer", "Nagaur", "Churu", "Ganganagar", "Hanumangarh"],
+
+        "EAST RAJASTHAN": ["Banswara", "Bhilwara", "Bundi", "Chittorgarh", "Dungarpur", "Jalore", "Jhunjhunu", "Pali", "Sikar", "Sirohi", "Swami Madhopur", "Udaipur","Jaipur", "Kota", "Alwar", "Bharatpur", "Ajmer", "Tonk", "Sawai Madhopur", "Dausa", "Jhalawar"],
+
+        "WEST MADHYA PRADESH": ["Indore", "Ujjain", "Ratlam", "Dhar", "Dewas", "Khandwa", "Khargone", "Burhanpur",'MANDSAUR','GUNA','BETUL','VIDISHA','GWALIOR','RAJGARH','EAST NIMAR','DATIA','WEST NIMAR','RAISEN','BARWANI','BHIND','NEEMUCH','MORENA','ASHOKNAGAR'],
+
+        "EAST MADHYA PRADESH": ["Balaghat", "Chhatarpur", "Damoh", "Jhabua", "Khandwa / East Nimar", "Khargone / West Nimar", "Mandla", "Narsinghpur", "Sagar", "Sehore", "Seoni / Shivani", "Shahdol", "Shajapur", "Shivpuri", "Sidhi", "Tikamgarh","Bhopal", "Jabalpur", "Rewa", "Satna", "Shahdol", "Singrauli", "Chhindwara", "Hoshangabad", "Narsimhapur", 'UMARIA','PANNA','NARSIMHAPUR','NIWARI','DINDORI'],
+
+        "GUJARAT REGION": ["Banaskantha", "Dangs", "Mehsana", "Panchmahal", "Sabarkantha", "Vadodara / Baroda","Ahmedabad", "Surat", "Vadodara", "Gandhinagar", "Anand", "Navsari",  "Narmada", "DADRA & NAGAR HAVELI", "DAMAN",'MAHISAGAR','PANCH MAHALS','TAPI','PATAN','MAHESANA','KHEDA','SABAR KANTHA','DOHAD','BANAS KANTHAARAVALLI','VALSAD','NAVSARI','CHOTA UDAIPUR','BHARUCH','THE DANGS','AHMADABAD'],
+
+        "SAURASHTRA & KUTCH": ["Kutch", "Jamnagar", "Kachchh", "Morbi", "Surendranagar", "Devbhumi Dwarka", 'DIU','GIR SOMNATH', "Porbandar","Jamnagar","Bhavnagar", "Rajkot", "Junagadh",  "Amreli", "Botad", "Morvi"],
+
+        "KONKAN & GOA": ["Bombay", "Mumbai", "Thane", "Raigad", "Ratnagiri", "Sindhudurg", "North Goa", "South Goa"],
+
+        "MADHYA MAHARASHTRA": ["Amarawati", "Dhule", "Nasik", "Solapur", "Yeotmal", "Pune", "Nashik", "Ahmednagar", "Satara", "Sangli", "Kolhapur", "Jalgaon"],
+
+        "MATATHWADA": ["Aurangabad", "Jalna", "Beed", "Osmanabad", "Parbhani", "Latur", "Nanded", "Hingoli"],
+
+        "VIDARBHA": ["Nagpur", "Amravati", "Chandrapur", "Bhandara", "Wardha", "Gondia", "Yavatmal", "Akola", "Washim", "Buldhana"],
+
+        "CHHATTISGARH": ["Raipur", "Bilaspur", "Durg", "Bastar", "Dantewada", "Jashpur", "Kanker", "Kawardha", "Kondagaon", "Korba", "Koriya", "Mahasamund", "Mungeli", "Narayanpur", "Raigarh", "Rajnandgaon", "Sukma", "Surajpur", "Surguja", 'BAMETARA','BALODA BAZAR','BALOD','JANJGIR - CHAMPA','BALRAMPUR','KABEERDHAM','DHAMTARI','DAKSHIN BASTAR DANTEWADA','GAURELA-PENDRA-MARWAHI','UTTAR BASTAR KANKER','GARIABAND'],
+
+        "COASTAL ANDHRA PRADESH": ["Visakhapatnam", "Krishna", "Guntur", "East Godavari", "West Godavari", "Srikakulam", "Vizianagaram", "Nellore", "Prakasam", "ALLURI SITHARAMA RAJU", "ANAKAPALLI", "BAPATLA", "PARVATHIPURAM MANYAM", "KAKINADA", "KONASEEMA", "SRI POTTI SRIRAMULU NELL*", "ELURU", "PALNADU", "NTR"],
+
+        "TELANGANA": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam", "Mahabubnagar", "Ranga Reddy", "Medak", "Adilabad", "Nalgonda"],
+
+        "RAYALSEEMA": ["Ananthapur", "Kadapa YSR", "S.P.S. Nellore","Kurnool", "Anantpur", "Chittoor", "Y.S.R.", "ANNAMAYYA", "NANDYAL", "SRI SATHYA SAI", "TIRUPATI"],
+
+        "TAMIL NADU": ["Chengalpattu MGR / Kanchipuram", "Kanyakumari", "North Arcot / Vellore", "Ramananthapuram", "South Arcot / Cuddalore", "The Nilgiris", "Thirunelveli", "Tiruchirapalli / Trichy","Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Vellore", "Thoothukudi", "Erode", "Cuddalore", "Kancheepuram", "Thanjavur", "Dindigul", "Krishnagiri", "Virudhunagar"],
+
+        "COASTAL KARNATAKA": ["Dakshina Kannada", "Udupi", "Uttara Kannada"],
+
+        "NORTH INTERIOR KARNATAKA": ["Bangalore", "Belgaum", "Bellary", "Bijapur / Vijayapura", "Chickmagalur", "Chitradurga", "Gulbarga / Kalaburagi", "Kodagu / Coorg", "Mysore", "Shimoge", "Tumkur","Dharwad", "Gadag", "Haveri", "Belagavi", "Bijapur", "Bagalkot", "Bidar", "Kalaburagi", "Koppal", "Raichur", "Yadgir",'BAGALKOTE','VIJAYAPURA'],
+
+        "SOUTH INTERIOR KARNATAKA": ["Mysuru", "Mandya", "Hassan", "Chamarajanagara", "Bengaluru", "Ramanagara", "Tumakuru", "Chikkamagaluru", "Kodagu",'BALLARI','SHIVAMOGGA','VIJAYANAGAR','BENGALURU RURAL','CHIKKABALLAPURA','DAVANAGERE','BANGALORECHITRADURGA','KOLAR'],
+
+        "KERALA": ["Eranakulam", "Thiruvananthapuram", "Ernakulam", "Kozhikode", "Kollam", "Thrissur", "Alappuzha", "Palakkad", "Malappuram", "Kottayam", "Kannur", "Wayanad", "Idukki", "Pathanamthitta", "Kasaragod"],
+
+        "LAKSHADWEEP": ["LAKSHADWEEP"]
+    }
+    
+def get_subdivision(district):
+    for subdivision, districts in subdivisions_to_districts.items():
+        districts = [div.upper() for div in districts]
+        if district.upper() in districts:
+            return subdivision.upper()
+    return None
+
+def get_districts(subdivision):    
+    return [sub.upper() for sub in subdivisions_to_districts.get(subdivision, "Subdivision not found")]
+
+districts_df = pd.read_csv(os.path.join("Database", 'districts.csv'))
+seasons_df = pd.read_csv(os.path.join("Database", 'seasons.csv'))
+crops_df = pd.read_csv(os.path.join("Database", 'crops.csv'))
+IMAGE_DIRECTORY = 'Database/Forecasts'
+
+
 @app.route('/')
 def home():
     return render_template('index.html')
 
+@app.route('/forecasts/<path:subdiv>/<filename>')
+def serve_image(subdiv, filename):
+    # Make sure the path matches your actual folder structure
+    return send_from_directory(os.path.join(IMAGE_DIRECTORY, subdiv), filename)
+
 @app.route('/districts', methods=['GET'])
 def get_districts():
-    districts = df['District'].unique().tolist()
+    districts = districts_df['dtname'].unique().tolist()
     return jsonify(districts)
 
 @app.route('/crops', methods=['GET'])
 def get_crops():
-    crops = pd.concat([df['Crop1'], df['Crop2']]).unique().tolist()
+    crops = seasons_df["Crop Name"].unique().tolist()
     return jsonify(crops)
 
 @app.route('/crop_info', methods=['GET'])
@@ -63,282 +161,36 @@ def get_crop_info():
     if not district or not crop:
         return jsonify({"error": "Please provide both district and crop"}), 400
 
-    crop_info = df[(df['District'] == district) & ((df['Crop1'] == crop) | (df['Crop2'] == crop))]
-    if crop_info.empty:
-        return jsonify({"error": "No data available for the provided district and crop"}), 404
+    with_seasons = seasons_df[seasons_df["Crop Name"] == crop.upper()]
+    with_crops = crops_df[crops_df["Crop Name"] == crop.upper()]
+    
+    subdiv = get_subdivision(district)
 
-    # Crop Pairings Plot
-    # try:
-    #     crop_pairings = sorted_pairs_crops[sorted_pairs_crops['Column Name'] == crop]
-        
-    #     # Debugging: Print crop_pairings DataFrame
-    #     print(f"Crop Pairings DataFrame for {crop}:\n{crop_pairings}")
+    image_filenames = [
+        'sarima_plot.png',
+        'prophet_plot.png',
+        'ets_plot.png',
+        'lstm_plot.png'
+    ]
 
-    #     if crop_pairings.empty:
-    #         return jsonify({"error": f"No pairing data available for crop: {crop}"}), 404
-        
-        
-    #     import joblib
-    #     import prophet
-    #     from prophet import Prophet
-    #     import pandas as pd
-    #     import matplotlib.pyplot as plt
+    # Generate URLs for the plot images
+    image_urls = {}
+    for filename in image_filenames:
+        image_path = os.path.join(IMAGE_DIRECTORY, subdiv, filename)
+        encoded_filename = urllib.parse.quote(filename)
 
-    #     # Version
-    #     print(prophet.__version__)
-
-    #     model_prophet = Prophet()
-    #     # Load the model
-    #     model_prophet = joblib.load('Helper/model_prophet.pkl')
-
-    #     scaling_value = model_prophet.scaling
-    #     print(f"Scaling value: {scaling_value}")
-
-    #     # Make a future dataframe for 5 years (60 months)
-    #     future = model_prophet.make_future_dataframe(periods=60, freq='M')
-    #     forecast_prophet = model_prophet.predict(future)
-        
-    #     # Plot the forecast
-    #     plt.figure(figsize=(25, 6))
-    #     fig = model_prophet.plot(forecast_prophet)
-    #     plt.title('Rainfall Forecast for Next 5 Years using Prophet')
-    #     plt.xlabel('Date')
-    #     plt.ylabel('Rainfall (mm)')
-    #     plt.show()
-        
-    #     fig1, ax1 = plt.subplots()
-    #     crop_pairings.plot(kind='bar', x='Crop', y='Correlation', ax=ax1)
-    #     ax1.set_title('Crop Pairings')
-    #     ax1.set_xlabel('Crop')
-    #     ax1.set_ylabel('Correlation')
-    #     plt.xticks(rotation=90)
-
-    #     # Convert plot to base64
-    #     img1 = io.BytesIO()
-    #     fig1.savefig(img1, format='png')
-    #     img1.seek(0)
-    #     plot1_url = base64.b64encode(img1.getvalue()).decode()
-        
-    # except Exception as e:
-    #     return jsonify({"error": f"Error generating crop pairings plot: {str(e)}"}), 500
-
-    # New Prophet code trial
-    # import joblib
-    # from prophet import Prophet
-    # import pandas as pd
-    # import matplotlib.pyplot as plt
-    # import io
-    # import base64
-
-    # try:
-    #     crop_pairings = sorted_pairs_crops[sorted_pairs_crops['Column Name'] == crop]
-        
-    #     # Debugging: Print crop_pairings DataFrame
-    #     print(f"Crop Pairings DataFrame for {crop}:\n{crop_pairings}")
-
-    #     if crop_pairings.empty:
-    #         return jsonify({"error": f"No pairing data available for crop: {crop}"}), 404
-
-    #     # Load the model
-    #     model_prophet = joblib.load('Helper/model_prophet.pkl')
-        
-    #     # Debugging: Print model_prophet object
-    #     print(f"Loaded Prophet model: {model_prophet}")
-
-    #     # Make a future dataframe for 5 years (60 months)
-    #     future = model_prophet.make_future_dataframe(periods=60, freq='M')
-        
-    #     # Debugging: Print future DataFrame
-    #     print(f"Future DataFrame:\n{future.head()}")
-
-    #     # Predict with the loaded model
-    #     forecast_prophet = model_prophet.predict(future)
-        
-    #     # Debugging: Print forecast DataFrame
-    #     print(f"Forecast DataFrame:\n{forecast_prophet.head()}")
-
-    #     # Plot the forecast
-    #     plt.figure(figsize=(25, 6))
-    #     fig = model_prophet.plot(forecast_prophet)
-    #     plt.title('Rainfall Forecast for Next 5 Years using Prophet')
-    #     plt.xlabel('Date')
-    #     plt.ylabel('Rainfall (mm)')
-    #     plt.show()
-
-    #     fig1, ax1 = plt.subplots()
-    #     crop_pairings.plot(kind='bar', x='Crop', y='Correlation', ax=ax1)
-    #     ax1.set_title('Crop Pairings')
-    #     ax1.set_xlabel('Crop')
-    #     ax1.set_ylabel('Correlation')
-    #     plt.xticks(rotation=90)
-
-    #     # Convert plot to base64
-    #     img1 = io.BytesIO()
-    #     fig1.savefig(img1, format='png')
-    #     img1.seek(0)
-    #     plot1_url = base64.b64encode(img1.getvalue()).decode()
-
-    # except Exception as e:
-    #     return jsonify({"error": f"Error generating crop pairings plot: {str(e)}"}), 500
-
-
-    # Rainfall Trend Plot
-    try:
-
-        # trying sarima model
-
-        import pandas as pd
-        import joblib
-        import matplotlib.pyplot as plt
-
-        # Load the saved SARIMA model using joblib
-        model_fit = joblib.load('Helper/sarima_model.pkl')
-
-        monthly_data = joblib.load('Helper/monthly_data.pkl')
-
-        # Forecast for the next few years (12 months in a year)
-        forecast_steps = 5 * 12  # 5 years
-        forecast = model_fit.get_forecast(steps=forecast_steps)
-        forecast_index = pd.period_range(start=monthly_data.index[-1] + 1, periods=forecast_steps, freq='M')
-        forecast_series = pd.Series(forecast.predicted_mean.values, index=forecast_index)
-
-        # Plot only the forecast
-        plt.figure(figsize=(12, 8))
-        plt.plot(forecast_series.index.to_timestamp(), forecast_series, label='Forecast', color='red')
-        plt.title('Rainfall Forecast for Next 5 Years')
-        plt.xlabel('Date')
-        plt.ylabel('Rainfall (mm)')
-        plt.legend()
-        plt.show()
-
-        # fig2, ax2 = plt.subplots()
-        # df_grouped = df[df['District'] == district].groupby('Month')['Rainfall'].mean()
-        # df_grouped.plot(kind='line', ax=ax2)
-        # ax2.set_title('Rainfall Trend')
-        # ax2.set_xlabel('Month')
-        # ax2.set_ylabel('Average Rainfall')
-
-        # Convert plot to base64
-        img2 = io.BytesIO()
-        # fig2.savefig(img2, format='png')
-        img2.seek(0)
-        plot2_url = base64.b64encode(img2.getvalue()).decode()
-    except Exception as e:
-        return jsonify({"error": f"Error generating rainfall trend plot: {str(e)}"}), 500
-
-
-    # # Rainfall Trend Plot - ETS
-    try:
-        import pandas as pd
-        import joblib
-        import matplotlib.pyplot as plt
-
-        # Load the saved ETS model
-        fit = joblib.load('Helper/ets_model.pkl')
-
-        # Check if monthly_data is a Series and ensure index is DatetimeIndex
-        if isinstance(monthly_data, pd.Series):
-            if isinstance(monthly_data.index, pd.PeriodIndex):
-                monthly_data.index = monthly_data.index.to_timestamp()
-
-            # Generate forecast for the next 60 periods (5 years)
-            forecast = fit.forecast(steps=60)
-
-            # Ensure forecast index is DatetimeIndex
-            if isinstance(forecast.index, pd.PeriodIndex):
-                forecast.index = forecast.index.to_timestamp()
-
-            plt.figure(figsize=(12, 6))
-            plt.plot(monthly_data.index[-20:], monthly_data[-20:], label='Observed')
-            plt.plot(forecast.index, forecast, label='Forecast', color='red')
-            plt.title('ETS Forecast')
-            plt.xlabel('Date')
-            plt.ylabel('Rainfall')
-            plt.legend()
-            plt.show()
+        if os.path.exists(image_path):
+            image_urls[filename.split('.')[0]] = f'/forecasts/{urllib.parse.quote(subdiv)}/{encoded_filename}'
         else:
-            print("Error: monthly_data is not a pandas Series")
-
-    except Exception as e:
-        print(f"Error generating ETS forecast plot: {str(e)}")
-
-    # Rainfall Trend Plot - LSTM
-    try:
-        from sklearn.preprocessing import MinMaxScaler
-        from tensorflow.keras.models import load_model
-        import joblib
-        import numpy as np
-        import pandas as pd
-        import matplotlib.pyplot as plt
-
-        # Load the data
-        monthly_data = joblib.load('Helper/monthly_data.pkl')
-
-        # Ensure the Series has a DateTime index
-        if not isinstance(monthly_data.index, pd.DatetimeIndex):
-            if isinstance(monthly_data.index, pd.PeriodIndex):
-                monthly_data.index = monthly_data.index.to_timestamp()
-            else:
-                monthly_data.index = pd.to_datetime(monthly_data.index)
-
-        # Prepare data
-        values = monthly_data.values.reshape(-1, 1)
-
-        # Normalize data
-        scaler = MinMaxScaler(feature_range=(0, 1))
-        scaled_values = scaler.fit_transform(values)
-
-        # Load the trained model
-        model = load_model('Helper/lstm_model.h5')
-
-        time_step = 10  # Define your time step value
-        last_sequence = scaled_values[-time_step:].reshape((1, time_step, 1))
-        predictions = []
-
-        for _ in range(60):  # Predict next 60 months
-            pred = model.predict(last_sequence, verbose=0)
-            predictions.append(pred[0, 0])
-
-            # Update the last sequence with the new prediction
-            new_sequence = np.zeros((1, time_step, 1))  # Create a new sequence
-            new_sequence[0, :-1, :] = last_sequence[0, 1:, :]  # Shift the old sequence
-            new_sequence[0, -1, :] = pred  # Add the new prediction
-            last_sequence = new_sequence
-
-        # Inverse transform the predictions
-        predictions = np.array(predictions).reshape(-1, 1)
-        predictions = scaler.inverse_transform(predictions)
-
-        # Prepare actual data for plotting
-        forecast_start = monthly_data.index[-1] + pd.DateOffset(months=1)
-        forecast_index = pd.date_range(start=forecast_start, periods=60, freq='M')
-
-        # Convert predictions to a DataFrame
-        forecast = pd.Series(predictions.flatten(), index=forecast_index)
-
-        # Plot results
-        plt.figure(figsize=(12, 6))
-        plt.plot(monthly_data.index[-20:], monthly_data[-20:], label='Observed')
-        plt.plot(forecast.index, forecast, label='Forecast', color='red')
-        plt.title('LSTM Forecast')
-        plt.xlabel('Date')
-        plt.ylabel('Rainfall')
-        plt.legend()
-        plt.show()
-    except Exception as e:
-        print(f"Error generating LSTM forecast plot: {str(e)}")
-
-
-
-
+            image_urls[filename.split('.')[0]] = None
+    
     response = {
-        'season': crop_info['Season'].values[0] if not crop_info.empty else 'N/A',
-        'pairings_plot': plot1_url,
-        'rainfall_trend_plot': plot2_url
+        'season': with_seasons["Column Name"].to_list() if not with_seasons.empty else 'N/A',
+        'crops': [c.title() for c in with_crops["Column Name"].to_list()][:5] if not with_crops.empty else 'N/A',
+        'images': image_urls
     }
+
     return jsonify(response)
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)

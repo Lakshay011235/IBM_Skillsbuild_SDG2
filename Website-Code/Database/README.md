@@ -1,14 +1,3 @@
-# JSON Data
+# Saved data extracted from Kaggle notebook
 
-Rainfall trend data
-{
-    Subdivision,
-    [Year, ...monthly rainfall]
-}
-
-Crop Pairings data
-{
-    Crop,
-    [Season pairing],
-    [Crop pairing]
-}
+Forecast models are to heavy to save, so we have saved their forecasts instead, actual models are available on kaggle.

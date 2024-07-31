@@ -1,250 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crop Info</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crop Forecast Dashboard</title>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(to right, #3a1c71, #d76d77, #ffaf7b);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+            background-color: #f0f2f5;
+            color: #333;
         }
         header {
-            background-color: #3a1c71;
+            background-color: #007bff;
             color: #fff;
+            padding: 20px;
             text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            animation: fadeIn 2s ease-in-out;
         }
-        h1 {
-            margin: 0;
-            font-size: 2.5rem;
+        .section {
+            margin-bottom: 40px;
         }
-        main {
-            flex: 1;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        form {
-            background-color: #fff;
-            color: #333;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 100%;
-            width: 100%;
-            box-sizing: border-box;
-            margin: 20px 0;
-            position: relative;
-            animation: slideIn 1.5s ease-in-out;
-        }
-        label {
-            font-weight: bold;
-        }
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
+        h2 {
+            color: #007bff;
             margin-bottom: 20px;
-            border-radius: 4px;
+            font-size: 1.5em;
+        }
+        select,
+        button {
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
             border: 1px solid #ccc;
+            border-radius: 5px;
         }
         button {
             background-color: #007bff;
             color: #fff;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s;
-            width: 100%;
+            transition: background-color 0.3s ease;
         }
         button:hover {
             background-color: #0056b3;
         }
-        #results {
-            background-color: #fff;
-            color: #333;
+        .results {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .results div {
+            flex: 1 1 calc(50% - 20px);
             padding: 20px;
+            background: #fff;
+            border: 1px solid #ddd;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 100%;
-            width: 100%;
-            box-sizing: border-box;
-            margin: 20px 0;
-            text-align: center;
-            animation: fadeIn 2s ease-in-out;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        #results img {
-            max-width: 100%;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-        footer {
-            background-color: #3a1c71;
-            color: #fff;
-            text-align: center;
-            padding: 10px 0;
-        }
-        .background {
-            background-image: url('https://wallpapercave.com/wp/wp2916561.jpg');
-            background-size: cover;
-            background-position: center;
-            padding: 60px 20px;
+        .results div:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
         .image-container {
-            position: relative;
-            width: 100%;
-            height: 200px;
-            overflow: hidden;
-            border-radius: 8px;
-            margin-bottom: 20px; /* Space above the animation */
+            text-align: center;
+            margin: 20px 0;
         }
         .image-container img {
-            position: absolute;
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 10px;
+            transition: transform 0.3s ease;
+        }
+        .image-container img:hover {
+            transform: scale(1.05);
+        }
+        footer {
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            padding: 15px;
+            position: fixed;
             width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0;
-            animation: imageFade 10s infinite;
-        }
-        .image-container img:nth-child(1) {
-            animation-delay: 0s;
-        }
-        .image-container img:nth-child(2) {
-            animation-delay: 4s;
-        }
-        .image-container img:nth-child(3) {
-            animation-delay: 8s;
-        }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-        @keyframes slideIn {
-            from {
-                transform: translateY(100%);
-            }
-            to {
-                transform: translateY(0);
-            }
-        }
-        @keyframes imageFade {
-            0% {
-                opacity: 0;
-            }
-            33% {
-                opacity: 1;
-            }
-            66% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-            }
-        }
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
-            .image-container {
-                height: 150px;
-            }
-        }
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.5rem;
-            }
-            .image-container {
-                height: 100px;
-            }
-            form {
-                padding: 10px;
-            }
-            button {
-                padding: 10px;
-            }
+            bottom: 0;
+            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
 <body>
-    <header class="background">
-        <h1>Get Crop Information</h1>
+    <header>
+        <h1>Crop Forecast Dashboard</h1>
     </header>
-    <main>
-        <form id="cropForm">
-            <label for="district">District:</label>
-            <select id="district" name="district">
-                <!-- Options will be populated by JavaScript -->
+
+    <div class="container">
+        <div class="section">
+            <h2>Select District and Crop</h2>
+            <select id="districtSelect">
+                <option value="">Select District</option>
             </select>
-            <label for="crop">Crop:</label>
-            <select id="crop" name="crop">
-                <!-- Options will be populated by JavaScript -->
+            <select id="cropSelect">
+                <option value="">Select Crop</option>
             </select>
-            <div class="image-container">
-                <img src="https://wallpaperaccess.com/full/1598237.jpg" alt="Farming Image 1">
-                <img src="https://foodindustryexecutive.com/wp-content/uploads/2024/03/bigstock-Cabbage-Plantations-Grow-In-Th-252757654-696x461.jpg" alt="Farming Image 2">
-                <img src="https://kj1bcdn.b-cdn.net/media/27078/zaid-3.jpg?width=1200" alt="Farming Image 3">
-            </div>
-            <button type="button" onclick="getCropInfo()">Get Info</button>
-        </form>
-        <div id="results">
-            <h2>Results:</h2>
-            <p id="season"></p>
-            <h3>Crop Pairings:</h3>
-            <img id="pairingsPlot" src="" alt="Crop Pairings">
-            <h3>Rainfall Trend:</h3>
-            <img id="rainfallTrendPlot" src="" alt="Rainfall Trend">
+            <button onclick="fetchCropInfo()">Get Crop Info</button>
         </div>
-    </main>
+
+        <div class="section results">
+            <div id="seasonResult">
+                <h3>Season Information</h3>
+                <p id="seasonData">
+                    Please select a crop to see season information.
+                </p>
+            </div>
+            <div id="cropsResult">
+                <h3>Crop Information</h3>
+                <p id="cropsData">
+                    Please select a crop to see related crops.
+                </p>
+            </div>
+        </div>
+
+        <div class="section image-container">
+            <h2>Forecast Images</h2>
+            <img id="sarima_plot" src="" alt="SARIMA Plot" />
+            <img id="prophet_plot" src="" alt="Prophet Plot" />
+            <img id="ets_plot" src="" alt="ETS Plot" />
+            <img id="lstm_plot" src="" alt="LSTM Plot" />
+        </div>
+    </div>
+
     <footer>
-        <p>&copy; 2024 Crop Info. All rights reserved.</p>
+        <p>&copy; 2024 Crop Forecast Dashboard. All Rights Reserved.</p>
     </footer>
 
     <script>
-        async function populateOptions(endpoint, selectId) {
-            const response = await fetch(endpoint);
-            const data = await response.json();
-            const select = document.getElementById(selectId);
-            data.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item;
-                option.textContent = item;
-                select.appendChild(option);
-            });
-        }
+        // Fetch districts and crops on page load
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("/districts")
+                .then((response) => response.json())
+                .then((districts) => {
+                    const districtSelect =
+                        document.getElementById("districtSelect");
+                    districts.forEach((district) => {
+                        const option = document.createElement("option");
+                        option.value = district;
+                        option.textContent = district;
+                        districtSelect.appendChild(option);
+                    });
+                });
 
-        async function getCropInfo() {
-            const district = document.getElementById('district').value;
-            const crop = document.getElementById('crop').value;
-            const response = await fetch(`/crop_info?district=${district}&crop=${crop}`);
-            const data = await response.json();
+            fetch("/crops")
+                .then((response) => response.json())
+                .then((crops) => {
+                    const cropSelect =
+                        document.getElementById("cropSelect");
+                    crops.forEach((crop) => {
+                        const option = document.createElement("option");
+                        option.value = crop;
+                        option.textContent = crop;
+                        cropSelect.appendChild(option);
+                    });
+                });
+        });
 
-            if (data.error) {
-                alert(data.error);
+        // Fetch crop info based on selected district and crop
+        function fetchCropInfo() {
+            const district =
+                document.getElementById("districtSelect").value;
+            const crop = document.getElementById("cropSelect").value;
+
+            if (district && crop) {
+                fetch(`/crop_info?district=${district}&crop=${crop}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        document.getElementById("seasonData").textContent =
+                            data.season.join(", ") || "N/A";
+                        document.getElementById("cropsData").textContent =
+                            data.crops.join(", ") || "N/A";
+
+                        // Update image sources
+                        [
+                            "sarima_plot",
+                            "prophet_plot",
+                            "ets_plot",
+                            "lstm_plot",
+                        ].forEach((plot) => {
+                            const img = document.getElementById(plot);
+                            if (img) {
+                                const url = data.images[plot];
+                                console.log(
+                                    `Setting ${plot} image source to ${url}`
+                                ); // Debugging line
+                                if (url) {
+                                    img.src = url;
+                                    img.style.display = "block";
+                                } else {
+                                    img.style.display = "none";
+                                }
+                            } else {
+                                console.error(
+                                    `Image element with id ${plot} not found.`
+                                );
+                            }
+                        });
+                    })
+                    .catch((error) =>
+                        console.error("Error fetching crop info:", error)
+                    );
             } else {
-                document.getElementById('season').textContent = `Season: ${data.season}`;
-                document.getElementById('pairingsPlot').src = `data:image/png;base64,${data.pairings_plot}`;
-                document.getElementById('rainfallTrendPlot').src = `data:image/png;base64,${data.rainfall_trend_plot}`;
+                alert("Please select both district and crop.");
             }
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            populateOptions('/districts', 'district');
-            populateOptions('/crops', 'crop');
-        });
     </script>
 </body>
 </html>
