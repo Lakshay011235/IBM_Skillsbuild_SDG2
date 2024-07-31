@@ -68,73 +68,247 @@ def get_crop_info():
         return jsonify({"error": "No data available for the provided district and crop"}), 404
 
     # Crop Pairings Plot
-    try:
-        crop_pairings = sorted_pairs_crops[sorted_pairs_crops['Column Name'] == crop]
+    # try:
+    #     crop_pairings = sorted_pairs_crops[sorted_pairs_crops['Column Name'] == crop]
         
-        # Debugging: Print crop_pairings DataFrame
-        print(f"Crop Pairings DataFrame for {crop}:\n{crop_pairings}")
+    #     # Debugging: Print crop_pairings DataFrame
+    #     print(f"Crop Pairings DataFrame for {crop}:\n{crop_pairings}")
 
-        if crop_pairings.empty:
-            return jsonify({"error": f"No pairing data available for crop: {crop}"}), 404
+    #     if crop_pairings.empty:
+    #         return jsonify({"error": f"No pairing data available for crop: {crop}"}), 404
         
         
+    #     import joblib
+    #     from prophet import Prophet
+    #     import pandas as pd
+    #     import matplotlib.pyplot as plt
+
+    #     model_prophet = Prophet()
+    #     # Load the model
+    #     model_prophet = joblib.load('Helper/model_prophet.pkl')
+
+    #     # Make a future dataframe for 5 years (60 months)
+    #     future = model_prophet.make_future_dataframe(periods=60, freq='M')
+    #     forecast_prophet = model_prophet.predict(future)
+        
+    #     # Plot the forecast
+    #     plt.figure(figsize=(25, 6))
+    #     fig = model_prophet.plot(forecast_prophet)
+    #     plt.title('Rainfall Forecast for Next 5 Years using Prophet')
+    #     plt.xlabel('Date')
+    #     plt.ylabel('Rainfall (mm)')
+    #     plt.show()
+        
+    #     fig1, ax1 = plt.subplots()
+    #     crop_pairings.plot(kind='bar', x='Crop', y='Correlation', ax=ax1)
+    #     ax1.set_title('Crop Pairings')
+    #     ax1.set_xlabel('Crop')
+    #     ax1.set_ylabel('Correlation')
+    #     plt.xticks(rotation=90)
+
+    #     # Convert plot to base64
+    #     img1 = io.BytesIO()
+    #     fig1.savefig(img1, format='png')
+    #     img1.seek(0)
+    #     plot1_url = base64.b64encode(img1.getvalue()).decode()
+        
+    # except Exception as e:
+    #     return jsonify({"error": f"Error generating crop pairings plot: {str(e)}"}), 500
+
+    # New Prophet code trial
+    # import joblib
+    # from prophet import Prophet
+    # import pandas as pd
+    # import matplotlib.pyplot as plt
+    # import io
+    # import base64
+
+    # try:
+    #     crop_pairings = sorted_pairs_crops[sorted_pairs_crops['Column Name'] == crop]
+        
+    #     # Debugging: Print crop_pairings DataFrame
+    #     print(f"Crop Pairings DataFrame for {crop}:\n{crop_pairings}")
+
+    #     if crop_pairings.empty:
+    #         return jsonify({"error": f"No pairing data available for crop: {crop}"}), 404
+
+    #     # Load the model
+    #     model_prophet = joblib.load('Helper/model_prophet.pkl')
+        
+    #     # Debugging: Print model_prophet object
+    #     print(f"Loaded Prophet model: {model_prophet}")
+
+    #     # Make a future dataframe for 5 years (60 months)
+    #     future = model_prophet.make_future_dataframe(periods=60, freq='M')
+        
+    #     # Debugging: Print future DataFrame
+    #     print(f"Future DataFrame:\n{future.head()}")
+
+    #     # Predict with the loaded model
+    #     forecast_prophet = model_prophet.predict(future)
+        
+    #     # Debugging: Print forecast DataFrame
+    #     print(f"Forecast DataFrame:\n{forecast_prophet.head()}")
+
+    #     # Plot the forecast
+    #     plt.figure(figsize=(25, 6))
+    #     fig = model_prophet.plot(forecast_prophet)
+    #     plt.title('Rainfall Forecast for Next 5 Years using Prophet')
+    #     plt.xlabel('Date')
+    #     plt.ylabel('Rainfall (mm)')
+    #     plt.show()
+
+    #     fig1, ax1 = plt.subplots()
+    #     crop_pairings.plot(kind='bar', x='Crop', y='Correlation', ax=ax1)
+    #     ax1.set_title('Crop Pairings')
+    #     ax1.set_xlabel('Crop')
+    #     ax1.set_ylabel('Correlation')
+    #     plt.xticks(rotation=90)
+
+    #     # Convert plot to base64
+    #     img1 = io.BytesIO()
+    #     fig1.savefig(img1, format='png')
+    #     img1.seek(0)
+    #     plot1_url = base64.b64encode(img1.getvalue()).decode()
+
+    # except Exception as e:
+    #     return jsonify({"error": f"Error generating crop pairings plot: {str(e)}"}), 500
+
+
+    # Rainfall Trend Plot
+    # try:
+
+    #     # trying sarima model
+
+    #     import pandas as pd
+    #     import joblib
+    #     import matplotlib.pyplot as plt
+
+    #     # Load the saved SARIMA model using joblib
+    #     model_fit = joblib.load('Helper/sarima_model.pkl')
+
+    #     monthly_data = joblib.load('Helper/monthly_data.pkl')
+
+    #     # Forecast for the next few years (12 months in a year)
+    #     forecast_steps = 5 * 12  # 5 years
+    #     forecast = model_fit.get_forecast(steps=forecast_steps)
+    #     forecast_index = pd.period_range(start=monthly_data.index[-1] + 1, periods=forecast_steps, freq='M')
+    #     forecast_series = pd.Series(forecast.predicted_mean.values, index=forecast_index)
+
+    #     # Plot only the forecast
+    #     plt.figure(figsize=(12, 8))
+    #     plt.plot(forecast_series.index.to_timestamp(), forecast_series, label='Forecast', color='red')
+    #     plt.title('Rainfall Forecast for Next 5 Years')
+    #     plt.xlabel('Date')
+    #     plt.ylabel('Rainfall (mm)')
+    #     plt.legend()
+    #     plt.show()
+
+    #     fig2, ax2 = plt.subplots()
+    #     df_grouped = df[df['District'] == district].groupby('Month')['Rainfall'].mean()
+    #     df_grouped.plot(kind='line', ax=ax2)
+    #     ax2.set_title('Rainfall Trend')
+    #     ax2.set_xlabel('Month')
+    #     ax2.set_ylabel('Average Rainfall')
+
+    #     # Convert plot to base64
+    #     img2 = io.BytesIO()
+    #     fig2.savefig(img2, format='png')
+    #     img2.seek(0)
+    #     plot2_url = base64.b64encode(img2.getvalue()).decode()
+    # except Exception as e:
+    #     return jsonify({"error": f"Error generating rainfall trend plot: {str(e)}"}), 500
+
+
+    # # Rainfall Trend Plot - ETS
+    # try:
+    #     import pandas as pd
+    #     import joblib
+    #     import matplotlib.pyplot as plt
+
+    #     # Load the saved ETS model
+    #     fit = joblib.load('Helper/ets_model.pkl')
+
+    #     # Check if monthly_data is a Series and ensure index is DatetimeIndex
+    #     if isinstance(monthly_data, pd.Series):
+    #         if isinstance(monthly_data.index, pd.PeriodIndex):
+    #             monthly_data.index = monthly_data.index.to_timestamp()
+
+    #         # Generate forecast for the next 60 periods (5 years)
+    #         forecast = fit.forecast(steps=60)
+
+    #         # Ensure forecast index is DatetimeIndex
+    #         if isinstance(forecast.index, pd.PeriodIndex):
+    #             forecast.index = forecast.index.to_timestamp()
+
+    #         plt.figure(figsize=(12, 6))
+    #         plt.plot(monthly_data.index[-20:], monthly_data[-20:], label='Observed')
+    #         plt.plot(forecast.index, forecast, label='Forecast', color='red')
+    #         plt.title('ETS Forecast')
+    #         plt.xlabel('Date')
+    #         plt.ylabel('Rainfall')
+    #         plt.legend()
+    #         plt.show()
+    #     else:
+    #         print("Error: monthly_data is not a pandas Series")
+
+    # except Exception as e:
+    #     print(f"Error generating ETS forecast plot: {str(e)}")
+
+    # Rainfall Trend Plot - LSTM
+    try:
+        from sklearn.preprocessing import MinMaxScaler
+        from tensorflow.keras.models import Sequential, load_model
+        from tensorflow.keras.layers import LSTM, Dense
         import joblib
-        from prophet import Prophet
+        import numpy as np
         import pandas as pd
         import matplotlib.pyplot as plt
 
-        model_prophet = Prophet()
-        # Load the model
-        model_prophet = joblib.load('Helper/model_prophet.pkl')
+        monthly_data = joblib.load('Helper/monthly_data.pkl')
 
-        # Make a future dataframe for 5 years (60 months)
-        future = model_prophet.make_future_dataframe(periods=60, freq='M')
-        forecast_prophet = model_prophet.predict(future)
-        
-        
-        
-        
-        # Plot the forecast
-        plt.figure(figsize=(25, 6))s
-        fig = model_prophet.plot(forecast_prophet)
-        plt.title('Rainfall Forecast for Next 5 Years using Prophet')
+        # Prepare data
+        values = monthly_data['RAINFALL'].values
+        values = values.reshape(-1, 1)
+
+        # Normalize data
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        scaled_values = scaler.fit_transform(values)
+
+        # Load the trained model
+        model = load_model('Helper/lstm_model.h5')
+        last_sequence = scaled_values[-time_step:].reshape((1, time_step, 1))
+        predictions = []
+
+        for _ in range(60):  # Predict next 60 months
+            pred = model.predict(last_sequence, verbose=0)
+            predictions.append(pred[0, 0])
+            
+            # Update the last sequence with the new prediction
+            new_sequence = np.zeros((1, time_step, 1))  # Create a new sequence
+            new_sequence[0, :-1, :] = last_sequence[0, 1:, :]  # Shift the old sequence
+            new_sequence[0, -1, :] = pred  # Add the new prediction
+            last_sequence = new_sequence
+            
+        # Inverse transform the predictions
+        predictions = np.array(predictions).reshape(-1, 1)
+        predictions = scaler.inverse_transform(predictions)
+
+        # Prepare actual data for plotting
+        forecast_start = monthly_data.index[-1] + pd.DateOffset(months=1)
+        forecast_index = pd.date_range(start=forecast_start, periods=60, freq='M')
+
+        # Plot results
+        plt.figure(figsize=(12, 6))
+        plt.plot(monthly_data.index[-20:], monthly_data['RAINFALL'][-20:], label='Actual')
+        plt.plot(forecast_index, predictions, label='Forecast', color='red')
+        plt.title('LSTM Forecast')
         plt.xlabel('Date')
-        plt.ylabel('Rainfall (mm)')
-        # plt.show()
-        
-        # fig1, ax1 = plt.subplots()
-        # crop_pairings.plot(kind='bar', x='Crop', y='Correlation', ax=ax1)
-        # ax1.set_title('Crop Pairings')
-        # ax1.set_xlabel('Crop')
-        # ax1.set_ylabel('Correlation')
-        # plt.xticks(rotation=90)
-
-        # Convert plot to base64
-        img1 = io.BytesIO()
-        fig1.savefig(img1, format='png')
-        img1.seek(0)
-        plot1_url = base64.b64encode(img1.getvalue()).decode()
-        
+        plt.ylabel('Rainfall')
+        plt.legend()
+        plt.show()
     except Exception as e:
-        return jsonify({"error": f"Error generating crop pairings plot: {str(e)}"}), 500
-
-    # Rainfall Trend Plot
-    try:
-        fig2, ax2 = plt.subplots()
-        df_grouped = df[df['District'] == district].groupby('Month')['Rainfall'].mean()
-        df_grouped.plot(kind='line', ax=ax2)
-        ax2.set_title('Rainfall Trend')
-        ax2.set_xlabel('Month')
-        ax2.set_ylabel('Average Rainfall')
-
-        # Convert plot to base64
-        img2 = io.BytesIO()
-        fig2.savefig(img2, format='png')
-        img2.seek(0)
-        plot2_url = base64.b64encode(img2.getvalue()).decode()
-    except Exception as e:
-        return jsonify({"error": f"Error generating rainfall trend plot: {str(e)}"}), 500
-
+        print(f"Error generating LSTM forecast plot: {str(e)}")
 
     response = {
         'season': crop_info['Season'].values[0] if not crop_info.empty else 'N/A',
