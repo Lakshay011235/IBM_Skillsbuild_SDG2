@@ -9,39 +9,39 @@ import urllib
 app = Flask(__name__)
 
 # Sample DataFrame
-data = {
-    'District': ['District1', 'District2', 'District1', 'District2'],
-    'State': ['State1', 'State1', 'State2', 'State2'],
-    'Month': ['January', 'February', 'March', 'April'],
-    'Season': ['Winter', 'Winter', 'Spring', 'Spring'],
-    'Crop1': ['WHEAT', 'Rice', 'Barley', 'Maize'],
-    'Crop2': ['Corn', 'Wheat', 'Oats', 'Rice'],
-    'Rainfall': [100, 150, 200, 250]
-}
-df = pd.DataFrame(data)
+# data = {
+#     'District': ['District1', 'District2', 'District1', 'District2'],
+#     'State': ['State1', 'State1', 'State2', 'State2'],
+#     'Month': ['January', 'February', 'March', 'April'],
+#     'Season': ['Winter', 'Winter', 'Spring', 'Spring'],
+#     'Crop1': ['WHEAT', 'Rice', 'Barley', 'Maize'],
+#     'Crop2': ['Corn', 'Wheat', 'Oats', 'Rice'],
+#     'Rainfall': [100, 150, 200, 250]
+# }
+# df = pd.DataFrame(data)
 
-# Example sorted pairs data
-sorted_pairs_seasons = pd.DataFrame({
-    'Column Name': ['WHEAT', 'WHEAT', 'WHEAT', 'WHEAT'],
-    'Season': ['Oct-Dec', 'Mar-May', 'Jun-Sep', 'Jan-Feb'],
-    'Correlation': [-0.582526, -0.367133, -0.280149, 0.029938]
-})
+# # Example sorted pairs data
+# sorted_pairs_seasons = pd.DataFrame({
+#     'Column Name': ['WHEAT', 'WHEAT', 'WHEAT', 'WHEAT'],
+#     'Season': ['Oct-Dec', 'Mar-May', 'Jun-Sep', 'Jan-Feb'],
+#     'Correlation': [-0.582526, -0.367133, -0.280149, 0.029938]
+# })
 
-sorted_pairs_crops = pd.DataFrame({
-    'Column Name': ['WHEAT']*27,
-    'Crop': ['RAPESEED AND MUSTARD', 'BARLEY', 'FRUITS', 'FINGER MILLET', 'RABI SORGHUM', 
-             'CHICKPEA', 'MAIZE', 'PEARL MILLET', 'PIGEONPEA', 'LINSEED', 
-             'MINOR PULSES', 'POTATOES', 'FODDER', 'SAFFLOWER', 'SUNFLOWER', 
-             'GROUNDNUT', 'SORGHUM', 'ONION', 'RICE', 'SUGARCANE', 'CASTOR', 
-             'SESAMUM', 'KHARIF SORGHUM', 'COTTON', 'SOYABEAN', 'VEGETABLES', 
-             'OILSEEDS'],
-    'Correlation': [0.697734, 0.577132, -0.455622, -0.446333, -0.295990, 
-                    0.285870, -0.231799, 0.229056, 0.206885, 0.173683, 
-                    0.151290, 0.150121, 0.139388, -0.138866, -0.103962, 
-                    -0.082805, -0.072365, -0.060503, -0.057967, 0.027976, 
-                    0.019075, 0.016974, -0.013902, -0.007521, -0.002466, 
-                    -0.002305, 0.000615]
-})
+# sorted_pairs_crops = pd.DataFrame({
+#     'Column Name': ['WHEAT']*27,
+#     'Crop': ['RAPESEED AND MUSTARD', 'BARLEY', 'FRUITS', 'FINGER MILLET', 'RABI SORGHUM', 
+#              'CHICKPEA', 'MAIZE', 'PEARL MILLET', 'PIGEONPEA', 'LINSEED', 
+#              'MINOR PULSES', 'POTATOES', 'FODDER', 'SAFFLOWER', 'SUNFLOWER', 
+#              'GROUNDNUT', 'SORGHUM', 'ONION', 'RICE', 'SUGARCANE', 'CASTOR', 
+#              'SESAMUM', 'KHARIF SORGHUM', 'COTTON', 'SOYABEAN', 'VEGETABLES', 
+#              'OILSEEDS'],
+#     'Correlation': [0.697734, 0.577132, -0.455622, -0.446333, -0.295990, 
+#                     0.285870, -0.231799, 0.229056, 0.206885, 0.173683, 
+#                     0.151290, 0.150121, 0.139388, -0.138866, -0.103962, 
+#                     -0.082805, -0.072365, -0.060503, -0.057967, 0.027976, 
+#                     0.019075, 0.016974, -0.013902, -0.007521, -0.002466, 
+#                     -0.002305, 0.000615]
+# })
 
 subdivisions_to_districts = {
         "ANDAMAN & NICOBAR ISLANDS": ["North  & Middle Andaman", "South Andaman", "Nicobars"],
@@ -185,8 +185,10 @@ def get_crop_info():
             image_urls[filename.split('.')[0]] = None
     
     response = {
-        'season': with_seasons["Column Name"].to_list() if not with_seasons.empty else 'N/A',
-        'crops': [c.title() for c in with_crops["Column Name"].to_list()][:5] if not with_crops.empty else 'N/A',
+        # 'season': with_seasons["Column Name"].to_list() if not with_seasons.empty else 'N/A',
+        # 'crops': [c.title() for c in with_crops["Column Name"].to_list()][:5] if not with_crops.empty else 'N/A',
+        'season': with_seasons[["Column Name", "Correlation"]].to_dict('records') if not with_seasons.empty else 'N/A',
+        'crops': with_crops[["Column Name", "Correlation"]].to_dict('records')[:5] if not with_crops.empty else 'N/A',
         'images': image_urls
     }
 

@@ -1,227 +1,657 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Crop Forecast Dashboard</title>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+		/>
+		<style>
+			body {
+				font-family: "Roboto", sans-serif;
+				margin: 0;
+				padding: 0;
+				background-color: #f0f2f5;
+				color: #333;
+			}
+			header {
+				background-color: #007bff;
+				color: #fff;
+				padding: 20px;
+				text-align: center;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			}
+			.container {
+				width: 90%;
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 20px;
+			}
+			.section {
+				margin-bottom: 40px;
+			}
+			h2 {
+				color: #007bff;
+				margin-bottom: 20px;
+				font-size: 1.5em;
+			}
+			select,
+			button {
+				padding: 10px;
+				margin: 10px 0;
+				font-size: 16px;
+				border: 1px solid #ccc;
+				border-radius: 5px;
+			}
+			button {
+				background-color: #007bff;
+				color: #fff;
+				border: none;
+				cursor: pointer;
+				transition: background-color 0.3s ease;
+			}
+			button:hover {
+				background-color: #0056b3;
+			}
+			.results {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 20px;
+			}
+			.results div {
+				flex: 1 1 calc(50% - 20px);
+				padding: 20px;
+				background: #fff;
+				border: 1px solid #ddd;
+				border-radius: 8px;
+				box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+				transition: transform 0.3s ease, box-shadow 0.3s ease;
+			}
+			.results div:hover {
+				transform: translateY(-5px);
+				box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+			}
+			.image-container {
+				text-align: center;
+				margin: 20px 0 75px;
+				display: flex;
+				flex-direction: column;
+				gap: 20px;
+			}
+			.image-container img {
+				width: 100%;
+				height: auto;
+				border-radius: 8px;
+				margin: 10px;
+				transition: transform 0.3s ease;
+			}
+			/* .image-container img:hover {
+            transform: scale(1.05);
+        } */
+			footer {
+				background-color: #007bff;
+				color: #fff;
+				text-align: center;
+				padding: 15px;
+				position: fixed;
+				width: 100%;
+				bottom: 0;
+				box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1>Crop Forecast Dashboard</h1>
+		</header>
+
+		<div class="container">
+			<div class="section">
+				<h2>Select District and Crop</h2>
+				<select id="districtSelect">
+					<option value="">Select District</option>
+				</select>
+				<select id="cropSelect">
+					<option value="">Select Crop</option>
+				</select>
+				<button onclick="fetchCropInfo()">Get Crop Info</button>
+			</div>
+
+			<div class="section results">
+				<div id="seasonResult">
+					<h3>Season Information</h3>
+					<p id="seasonData">Please select a crop to see season information.</p>
+				</div>
+				<div id="cropsResult">
+					<h3>Crop Information</h3>
+					<p id="cropsData">Please select a crop to see related crops.</p>
+				</div>
+			</div>
+
+			<div class="section image-container">
+				<h2>Forecast Images</h2>
+				<img id="sarima_plot" src="" alt="SARIMA Plot" />
+				<img id="prophet_plot" src="" alt="Prophet Plot" />
+				<img id="ets_plot" src="" alt="ETS Plot" />
+				<img id="lstm_plot" src="" alt="LSTM Plot" />
+			</div>
+		</div>
+
+		<footer>
+			<p>&copy; 2024 Crop Forecast Dashboard. All Rights Reserved.</p>
+		</footer>
+
+		<script>
+			// Fetch districts and crops on page load
+			document.addEventListener("DOMContentLoaded", function () {
+				fetch("/districts")
+					.then((response) => response.json())
+					.then((districts) => {
+						const districtSelect = document.getElementById("districtSelect");
+						districts.forEach((district) => {
+							const option = document.createElement("option");
+							option.value = district;
+							option.textContent = district;
+							districtSelect.appendChild(option);
+						});
+					});
+
+				fetch("/crops")
+					.then((response) => response.json())
+					.then((crops) => {
+						const cropSelect = document.getElementById("cropSelect");
+						crops.forEach((crop) => {
+							const option = document.createElement("option");
+							option.value = crop;
+							option.textContent = crop;
+							cropSelect.appendChild(option);
+						});
+					});
+			});
+
+			// Fetch crop info based on selected district and crop
+			function fetchCropInfo() {
+				const district = document.getElementById("districtSelect").value;
+				const crop = document.getElementById("cropSelect").value;
+
+				if (district && crop) {
+					fetch(`/crop_info?district=${district}&crop=${crop}`)
+						.then((response) => response.json())
+						.then((data) => {
+							document.getElementById("seasonData").textContent =
+								data.season.join(", ") || "N/A";
+							document.getElementById("cropsData").textContent =
+								data.crops.join(", ") || "N/A";
+
+							// Update image sources
+							["sarima_plot", "prophet_plot", "ets_plot", "lstm_plot"].forEach(
+								(plot) => {
+									const img = document.getElementById(plot);
+									if (img) {
+										const url = data.images[plot];
+										console.log(`Setting ${plot} image source to ${url}`); // Debugging line
+										if (url) {
+											img.src = url;
+											img.style.display = "block";
+										} else {
+											img.style.display = "none";
+										}
+									} else {
+										console.error(`Image element with id ${plot} not found.`);
+									}
+								}
+							);
+						})
+						.catch((error) =>
+							console.error("Error fetching crop info:", error)
+						);
+				} else {
+					alert("Please select both district and crop.");
+				}
+			}
+		</script>
+	</body>
+</html> -->
+
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Crop Forecast Dashboard</title>
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f2f5;
-            color: #333;
-        }
-        header {
-            background-color: #007bff;
-            color: #fff;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .section {
-            margin-bottom: 40px;
-        }
-        h2 {
-            color: #007bff;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-        }
-        select,
-        button {
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .results {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .results div {
-            flex: 1 1 calc(50% - 20px);
-            padding: 20px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .results div:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        }
-        .image-container {
-            text-align: center;
-            margin: 20px 0;
-        }
-        .image-container img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin: 10px;
-            transition: transform 0.3s ease;
-        }
-        .image-container img:hover {
-            transform: scale(1.05);
-        }
-        footer {
-            background-color: #007bff;
-            color: #fff;
-            text-align: center;
-            padding: 15px;
-            position: fixed;
-            width: 100%;
-            bottom: 0;
-            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>Crop Forecast Dashboard</h1>
-    </header>
-
-    <div class="container">
-        <div class="section">
-            <h2>Select District and Crop</h2>
-            <select id="districtSelect">
-                <option value="">Select District</option>
-            </select>
-            <select id="cropSelect">
-                <option value="">Select Crop</option>
-            </select>
-            <button onclick="fetchCropInfo()">Get Crop Info</button>
-        </div>
-
-        <div class="section results">
-            <div id="seasonResult">
-                <h3>Season Information</h3>
-                <p id="seasonData">
-                    Please select a crop to see season information.
-                </p>
-            </div>
-            <div id="cropsResult">
-                <h3>Crop Information</h3>
-                <p id="cropsData">
-                    Please select a crop to see related crops.
-                </p>
-            </div>
-        </div>
-
-        <div class="section image-container">
-            <h2>Forecast Images</h2>
-            <img id="sarima_plot" src="" alt="SARIMA Plot" />
-            <img id="prophet_plot" src="" alt="Prophet Plot" />
-            <img id="ets_plot" src="" alt="ETS Plot" />
-            <img id="lstm_plot" src="" alt="LSTM Plot" />
-        </div>
-    </div>
-
-    <footer>
-        <p>&copy; 2024 Crop Forecast Dashboard. All Rights Reserved.</p>
-    </footer>
-
-    <script>
-        // Fetch districts and crops on page load
-        document.addEventListener("DOMContentLoaded", function () {
-            fetch("/districts")
-                .then((response) => response.json())
-                .then((districts) => {
-                    const districtSelect =
-                        document.getElementById("districtSelect");
-                    districts.forEach((district) => {
-                        const option = document.createElement("option");
-                        option.value = district;
-                        option.textContent = district;
-                        districtSelect.appendChild(option);
-                    });
-                });
-
-            fetch("/crops")
-                .then((response) => response.json())
-                .then((crops) => {
-                    const cropSelect =
-                        document.getElementById("cropSelect");
-                    crops.forEach((crop) => {
-                        const option = document.createElement("option");
-                        option.value = crop;
-                        option.textContent = crop;
-                        cropSelect.appendChild(option);
-                    });
-                });
-        });
-
-        // Fetch crop info based on selected district and crop
-        function fetchCropInfo() {
-            const district =
-                document.getElementById("districtSelect").value;
-            const crop = document.getElementById("cropSelect").value;
-
-            if (district && crop) {
-                fetch(`/crop_info?district=${district}&crop=${crop}`)
-                    .then((response) => response.json())
-                    .then((data) => {
-                        document.getElementById("seasonData").textContent =
-                            data.season.join(", ") || "N/A";
-                        document.getElementById("cropsData").textContent =
-                            data.crops.join(", ") || "N/A";
-
-                        // Update image sources
-                        [
-                            "sarima_plot",
-                            "prophet_plot",
-                            "ets_plot",
-                            "lstm_plot",
-                        ].forEach((plot) => {
-                            const img = document.getElementById(plot);
-                            if (img) {
-                                const url = data.images[plot];
-                                console.log(
-                                    `Setting ${plot} image source to ${url}`
-                                ); // Debugging line
-                                if (url) {
-                                    img.src = url;
-                                    img.style.display = "block";
-                                } else {
-                                    img.style.display = "none";
-                                }
-                            } else {
-                                console.error(
-                                    `Image element with id ${plot} not found.`
-                                );
-                            }
-                        });
-                    })
-                    .catch((error) =>
-                        console.error("Error fetching crop info:", error)
-                    );
-            } else {
-                alert("Please select both district and crop.");
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Crop Forecast Dashboard</title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+        />
+        <style>
+            body {
+                font-family: "Roboto", sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f0f2f5;
+                color: #333;
+                background-image: url("https://plus.unsplash.com/premium_photo-1664116928607-896124327b11?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NjF8fGFncmljdWx0dXJlfGVufDB8fDB8fHww"); /* Add a background image */
+                background-size: cover;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
             }
-        }
-    </script>
-</body>
+            header {
+                /* background: url("https://media.istockphoto.com/id/1493904715/photo/vancouver-island-british-columbia.webp?b=1&s=170667a&w=0&k=20&c=-ysLcdfa_lXSZiRLkGGZ4Ye7F7-B24kgHxKgjPtssa4="); */
+               background: url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjN8fHN1bnxlbnwwfHwwfHx8MA%3D%3D");
+                background-repeat: no-repeat;
+                background-size: cover;
+                background-position: center 55%;
+                color: #0e6447;
+                padding: 20px;
+                text-align: center;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                position: relative;
+            }
+            header::after {
+                content: "";
+                background: url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzR8fGFncmljdWx0dXJlfGVufDB8fDB8fHww"); /* Add a header background image */
+                opacity: 0.3;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: -1;
+            }
+            .container {
+                width: 90%;
+                max-width: 1200px;
+                margin: 20px auto 70px;
+                padding: 20px;
+                background: rgba(255, 255, 255, 0.75);
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+            .section {
+                margin-bottom: 40px;
+            }
+			h1 {
+				background: rgba(255, 255, 255, 0.5);
+				border-radius: 2rem;
+				display:flex;
+				justify-content: center;
+				align-items: center;
+				padding: 1rem;
+				margin: 1rem;
+				height:4rem;
+				
+			}
+            h2 {
+                color: #003772;
+                margin-bottom: 20px;
+                font-size: 1.5em;
+            }
+            h3 {
+                color: #003772;
+            }
+            select,
+            button {
+                padding: 10px;
+                margin: 10px 0;
+                font-size: 16px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+            }
+            select:focus,
+            button:focus {
+                outline: none;
+                border-color: #015c57;
+            }
+            button {
+                background-color: #03968e;
+                color: #fff;
+                border: none;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            button:hover {
+                background-color: #015c57;
+            }
+            .results {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+            .results div {
+                flex: 1 1 calc(50% - 20px);
+                padding: 20px;
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            .results div:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            }
+            .image-container {
+                text-align: center;
+                margin: 20px 0 75px;
+                display: flex;
+                flex-direction: column;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+            }
+            .image-container h2 {
+                grid-column: span 2;
+                text-align: center;
+            }
+            .image-container img {
+                width: 100%;
+                height: auto;
+                border-radius: 8px;
+                transition: transform 0.3s ease;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+            .image-container img:hover {
+                transform: scale(1.05);
+            }
+            footer {
+                /* background: linear-gradient(45deg, #007bff, #00aaff); */
+                background-color: #015c57;
+                color: #fff;
+				font-size: 0.8rem;
+                text-align: center;
+                position: fixed;
+                width: 100%;
+                bottom: 0;
+                box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            table {
+                background: rgba(255, 255, 255, 1);
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+            th,
+            td {
+                width: 50%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                text-align: left;
+            }
+            th {
+                background-color: #015c57;
+                color: white;
+            }
+            figure {
+                margin: 0;
+                text-align: center;
+            }
+            figcaption {
+                margin-top: 8px;
+                font-style: italic;
+            }
+			a {
+				color: white;
+			}
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Crop Planning Dashboard</h1>
+        </header>
+
+        <div class="container">
+            <div class="section">
+                <h2>Select District and Crop</h2>
+                <select id="districtSelect">
+                    <option value="">Select District</option>
+                </select>
+                <select id="cropSelect">
+                    <option value="">Select Crop</option>
+                </select>
+                <button onclick="fetchCropInfo()">
+                    <i class="fas fa-search"></i> Get Crop and Rainfall Info
+                </button>
+            </div>
+
+            <div class="section">
+                <h3>Seasons Information</h3>
+				<i>Which is the best season to grow the crop in ?</i>
+                <table id="seasonTable">
+                    <thead>
+                        <tr>
+                            <th>Season</th>
+                            <th>Correlation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="seasonTableBody">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h3>Crop Information</h3>
+				<i>Which is the best crop to grow the crop with ?</i>
+                <table id="cropsTable">
+                    <thead>
+                        <tr>
+                            <th>Crop</th>
+                            <th>Correlation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cropsTableBody">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- <div class="section results">
+				<div id="seasonResult">
+					<h3>Season Information</h3>
+					<p id="seasonData">Please select a crop to see season information.</p>
+				</div>
+				<div id="cropsResult">
+					<h3>Crop Information</h3>
+					<p id="cropsData">Please select a crop to see related crops.</p>
+				</div>
+			</div> -->
+
+            <div class="section image-container">
+                <h2>Rainfall Forecast Images</h2>
+                <figure>
+                    <img id="sarima_plot" src="" alt="SARIMA Plot" />
+                    <figcaption>Using SARIMA</figcaption>
+                </figure>
+                <figure>
+                    <img id="prophet_plot" src="" alt="Prophet Plot" />
+                    <figcaption>Using Prophet</figcaption>
+                </figure>
+                <figure>
+                    <img id="ets_plot" src="" alt="ETS Plot" />
+                    <figcaption>Using ETS</figcaption>
+                </figure>
+                <figure>
+                    <img id="lstm_plot" src="" alt="LSTM Plot" />
+                    <figcaption>Using LSTM</figcaption>
+                </figure>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2024 Crop Planning Dashboard. All Rights Reserved.</p>
+            <p>Disclaimer: This is a demo-project for IBM_Skillbuild Internship, this by no means is substitute for real advise.</p>
+            <p>Contact: <a href="mailto:lakshayegyu@gmail.com">lakshayegyu@gmail.com</a></p>
+
+        </footer>
+
+        <script>
+            // Fetch districts and crops on page load
+            document.addEventListener("DOMContentLoaded", function () {
+                fetch("/districts")
+                    .then((response) => response.json())
+                    .then((districts) => {
+                        const districtSelect =
+                            document.getElementById("districtSelect");
+                        districts.forEach((district) => {
+                            const option = document.createElement("option");
+                            option.value = district;
+                            option.textContent = district;
+                            districtSelect.appendChild(option);
+                        });
+                    });
+
+                fetch("/crops")
+                    .then((response) => response.json())
+                    .then((crops) => {
+                        const cropSelect =
+                            document.getElementById("cropSelect");
+                        crops.forEach((crop) => {
+                            const option = document.createElement("option");
+                            option.value = crop;
+                            option.textContent = crop;
+                            cropSelect.appendChild(option);
+                        });
+                    });
+            });
+
+            // Fetch crop info based on selected district and crop
+            // function fetchCropInfo() {
+            // 	const district = document.getElementById("districtSelect").value;
+            // 	const crop = document.getElementById("cropSelect").value;
+
+            // 	if (district && crop) {
+            // 		fetch(`/crop_info?district=${district}&crop=${crop}`)
+            // 			.then((response) => response.json())
+            // 			.then((data) => {
+            // 				if (data.season !== "N/A") {
+            // 					const seasonData = data.season
+            // 						.map(
+            // 							(season) =>
+            // 								`${season["Column Name"]} (Correlation: ${season["Correlation"]})`
+            // 						)
+            // 						.join(", ");
+            // 					document.getElementById("seasonData").textContent = seasonData;
+            // 				} else {
+            // 					document.getElementById("seasonData").textContent = "N/A";
+            // 				}
+
+            // 				if (data.crops !== "N/A") {
+            // 					const cropsData = data.crops
+            // 						.map(
+            // 							(crop) =>
+            // 								`${crop["Column Name"]} (Correlation: ${crop["Correlation"]})`
+            // 						)
+            // 						.join(", ");
+            // 					document.getElementById("cropsData").textContent = cropsData;
+            // 				} else {
+            // 					document.getElementById("cropsData").textContent = "N/A";
+            // 				}
+
+            // 				// Update image sources
+            // 				["sarima_plot", "prophet_plot", "ets_plot", "lstm_plot"].forEach(
+            // 					(plot) => {
+            // 						const img = document.getElementById(plot);
+            // 						if (img) {
+            // 							const url = data.images[plot];
+            // 							console.log(`Setting ${plot} image source to ${url}`); // Debugging line
+            // 							if (url) {
+            // 								img.src = url;
+            // 								img.style.display = "block";
+            // 							} else {
+            // 								img.style.display = "none";
+            // 							}
+            // 						} else {
+            // 							console.error(`Image element with id ${plot} not found.`);
+            // 						}
+            // 					}
+            // 				);
+            // 			})
+            // 			.catch((error) =>
+            // 				console.error("Error fetching crop info:", error)
+            // 			);
+            // 	} else {
+            // 		alert("Please select both district and crop.");
+            // 	}
+            // }
+
+            function fetchCropInfo() {
+                const district =
+                    document.getElementById("districtSelect").value;
+                const crop = document.getElementById("cropSelect").value;
+
+                if (district && crop) {
+                    fetch(`/crop_info?district=${district}&crop=${crop}`)
+                        .then((response) => response.json())
+                        .then((data) => {
+                            // Update season table
+                            const seasonTableBody =
+                                document.getElementById("seasonTableBody");
+                            seasonTableBody.innerHTML = "";
+                            if (data.season !== "N/A") {
+                                data.season.forEach((season) => {
+                                    const row = document.createElement("tr");
+                                    row.innerHTML = `<td>${season["Column Name"]}</td><td>${Math.abs(season["Correlation"])}</td>`;
+                                    seasonTableBody.appendChild(row);
+                                });
+                            } else {
+                                seasonTableBody.innerHTML =
+                                    '<tr><td colspan="2">N/A</td></tr>';
+                            }
+
+                            // Update crops table
+                            const cropsTableBody =
+                                document.getElementById("cropsTableBody");
+                            cropsTableBody.innerHTML = "";
+                            if (data.crops !== "N/A") {
+                                data.crops.forEach((crop) => {
+                                    const row = document.createElement("tr");
+                                    row.innerHTML = `<td>${crop["Column Name"]}</td><td>${Math.abs(crop["Correlation"])}</td>`;
+                                    cropsTableBody.appendChild(row);
+                                });
+                            } else {
+                                cropsTableBody.innerHTML =
+                                    '<tr><td colspan="2">N/A</td></tr>';
+                            }
+
+                            // Update image sources
+                            [
+                                "sarima_plot",
+                                "prophet_plot",
+                                "ets_plot",
+                                "lstm_plot",
+                            ].forEach((plot) => {
+                                const img = document.getElementById(plot);
+                                if (img) {
+                                    const url = data.images[plot];
+                                    console.log(
+                                        `Setting ${plot} image source to ${url}`
+                                    ); // Debugging line
+                                    if (url) {
+                                        img.src = url;
+                                        img.style.display = "block";
+                                    } else {
+                                        img.style.display = "none";
+                                    }
+                                } else {
+                                    console.error(
+                                        `Image element with id ${plot} not found.`
+                                    );
+                                }
+                            });
+                        })
+                        .catch((error) =>
+                            console.error("Error fetching crop info:", error)
+                        );
+                } else {
+                    alert("Please select both district and crop.");
+                }
+            }
+        </script>
+    </body>
 </html>
